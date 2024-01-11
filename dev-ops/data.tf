@@ -5,6 +5,8 @@ data "cloudinit_config" "user_data_web" {
   part {
     filename     = "init.cfg" # name that will be used on the server.
     content_type = "text/cloud-config"
-    content      = templatefile("cloud-init-web.tpl.yaml", {})
+    content = templatefile("cloud-init-web.tpl.yaml", {
+      docker_gpg_key_id = var.docker_gpg_key_id
+    })
   }
 }

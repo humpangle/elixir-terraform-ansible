@@ -14,6 +14,10 @@ variable "aws_secret_access_key" {
   sensitive = true
 }
 
+variable "docker_gpg_key_id" {
+  type = string
+}
+
 variable "resource_tags" {
   type = map(string)
   default = {
