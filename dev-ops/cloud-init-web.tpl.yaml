@@ -27,5 +27,7 @@ system_info:
     groups: [docker]
 
 runcmd:
+  - curl -o /usr/bin/p-env https://raw.githubusercontent.com/humpangle/dotfiles/master/scripts/p-env
+  - chmod 755 /usr/bin/p-env
   - docker login --username ${container_registry_user_name} --password ${container_registry_password}
   - docker pull ${container_image_name}

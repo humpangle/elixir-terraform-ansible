@@ -13,8 +13,8 @@ resource "aws_key_pair" "key_pair" {
 }
 
 resource "local_file" "private_key" {
-  content         = tls_private_key.ssh_key.private_key_pem
-  filename        = local.ssh_private_key_filename
+  content  = tls_private_key.ssh_key.private_key_openssh
+  filename = local.ssh_private_key_filename
   file_permission = 0400
 }
 
@@ -55,12 +55,18 @@ resource "aws_instance" "web" {
 
   vpc_security_group_ids = [aws_security_group.web_public_sg.id]
 
+  key_name = aws_key_pair.key_pair.key_name
+
   user_data_base64 = data.cloudinit_config.user_data_web.rendered
 
   tags = merge(
     var.resource_tags,
     { Name = "web" }
   )
+
+  provisioner "local-exec" {
+    command = "sed -i \"s/PHX_HOST=.*/PHX_HOST=${aws_instance.web.public_dns}/g\" \"../.env.p.remote.n\""
+  }
 }
 
 output "web_public_ip" {
@@ -70,5 +76,3 @@ output "web_public_ip" {
 output "web_public_dns" {
   value = aws_instance.web.public_dns
 }
-
-# sudo cat /var/lib/cloud/instances/i-0cb9fc801e4d1c31f/user-data.txt

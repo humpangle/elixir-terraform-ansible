@@ -5,8 +5,6 @@
 set -o pipefail
 set -o noclobber
 
-DOCKER_IMAGE_NAME='samba6/kanmii:elixir-phx-terraform'
-
 # -----------------------------------------------------------------------------
 # For help text, you may use the form:
 # function func_name {
@@ -238,20 +236,24 @@ function d {
 
 function b {
   docker build \
-    -t "$DOCKER_IMAGE_NAME" \
+    -t "$CONTAINER_IMAGE_NAME" \
     .
 }
 
 function dps {
   docker push \
-    "$DOCKER_IMAGE_NAME"
+    "$CONTAINER_IMAGE_NAME"
 }
 
 function p {
-  docker run -i -t --rm --name my_chosen_name \
+  docker run -i -t --rm --name "$CONTAINER_NAME" \
     --env-file="${ENV_FILENAME:-.env}" \
     -p 5000:5000 \
-    "$DOCKER_IMAGE_NAME"
+    "$CONTAINER_IMAGE_NAME"
+}
+
+function push {
+  docker push "$CONTAINER_IMAGE_NAME"
 }
 
 function help {
