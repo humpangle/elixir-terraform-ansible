@@ -1,0 +1,12 @@
+"all":
+  "children":
+    "remote":
+      "hosts":
+        "staging":
+          "ansible_host": "18.119.115.74"
+          "ansible_private_key_file": "/home/kanmii/projects/terraform/elixir-terraform/dev-ops/terraform/ssh-key.pem"
+          "ansible_user": "ubuntu"
+  "vars":
+    "CONTAINER_IMAGE_NAME": "samba6/kanmii:elixir-phx-terraform-prod-staging"
+    "CONTAINER_NAME": "elixir-phx-terraform"
+    "ENV_FILENAME": "/home/ubuntu/elixir-phoenix-terraform/.env"

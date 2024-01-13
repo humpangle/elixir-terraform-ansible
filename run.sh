@@ -40,6 +40,9 @@ PATH=./node_modules/.bin:$PATH
 # Helper functions start with _ and aren't listed in this script's help menu.
 # -----------------------------------------------------------------------------
 
+SCRIPT_FULLNAME="$(realpath "$0")"
+SCRIPT_DIR_PATH="$(dirname "$SCRIPT_FULLNAME")"
+
 function _wait-until {
   : "Run 'command_to_run' and try until 'timeout' is reached. Usage:"
   : "  ./run.sh _wait-until [OPTIONS] command_to_run"
@@ -149,15 +152,17 @@ function _timestamp {
 }
 
 function _raise-on-no-env {
-  if [[ ! -e "${ENV_FILENAME}" ]] ||
-    [[ "${ENV_FILENAME}" =~ .env.example ]]; then
+  if [[ ! -e "${ENV_FILENAME_RAW}" ]] ||
+    [[ "${ENV_FILENAME_RAW}" =~ .env.example ]]; then
     echo -e "Environment file does not exist or it's the wrong one."
     exit 1
   fi
 
   local _required_envs=(
-    ENV1
-    ENV2
+    ENV_FILENAME
+    PORT
+    CONTAINER_IMAGE_NAME
+    CONTAINER_NAME
   )
 
   for _env_name in "${_required_envs[@]}"; do
@@ -234,26 +239,33 @@ function d {
     -S mix phx.server
 }
 
-function b {
+function dbuild {
+  : "Build the docker image"
+
+  _raise-on-no-env
+
   docker build \
     -t "$CONTAINER_IMAGE_NAME" \
-    .
+    "$SCRIPT_DIR_PATH"
 }
 
-function dps {
+function dpush {
+  : "Push the docker image to remote repository"
+
   docker push \
     "$CONTAINER_IMAGE_NAME"
 }
 
-function p {
-  docker run -i -t --rm --name "$CONTAINER_NAME" \
-    --env-file="${ENV_FILENAME:-.env}" \
-    -p 5000:5000 \
-    "$CONTAINER_IMAGE_NAME"
-}
+function drun {
+  : "Run docker image"
 
-function push {
-  docker push "$CONTAINER_IMAGE_NAME"
+  _raise-on-no-env
+
+  docker run -i -t --rm \
+    --name "$CONTAINER_NAME" \
+    --env-file="${ENV_FILENAME}" \
+    -p "$DOCKER_PUBLISHED_PORT:$PORT" \
+    "$CONTAINER_IMAGE_NAME"
 }
 
 function help {

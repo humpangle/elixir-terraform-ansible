@@ -6,10 +6,11 @@ data "cloudinit_config" "user_data_web" {
     filename     = "init.cfg" # name that will be used on the server.
     content_type = "text/cloud-config"
     content = templatefile("cloud-init-web.tpl.yaml", {
-      docker_gpg_key_id = var.docker_gpg_key_id,
-      container_registry_user_name = var.container_registry_user_name,
-      container_registry_password = var.container_registry_password,
-      container_image_name = var.container_image_name,
+      DOCKER_GPG_KEY_ID = var.DOCKER_GPG_KEY_ID,
+      CONTAINER_REGISTRY_USER_NAME = var.CONTAINER_REGISTRY_USER_NAME,
+      CONTAINER_REGISTRY_PASSWORD = var.CONTAINER_REGISTRY_PASSWORD,
+      CONTAINER_IMAGE_NAME = var.CONTAINER_IMAGE_NAME,
+      APP_ROOT = var.APP_ROOT,
     })
   }
 }

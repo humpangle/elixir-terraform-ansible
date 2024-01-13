@@ -4,7 +4,7 @@ resource "tls_private_key" "ssh_key" {
 
 locals {
   key_name                 = "web-key"
-  ssh_private_key_filename = "ssh-key.pem"
+  ssh_private_key_filename = abspath("${path.module}/ssh-key.pem")
 }
 
 resource "aws_key_pair" "key_pair" {
@@ -13,8 +13,8 @@ resource "aws_key_pair" "key_pair" {
 }
 
 resource "local_file" "private_key" {
-  content  = tls_private_key.ssh_key.private_key_openssh
-  filename = local.ssh_private_key_filename
+  content         = tls_private_key.ssh_key.private_key_openssh
+  filename        = local.ssh_private_key_filename
   file_permission = 0400
 }
 
@@ -64,9 +64,45 @@ resource "aws_instance" "web" {
     { Name = "web" }
   )
 
+  # Publish host dns to environment file
   provisioner "local-exec" {
-    command = "sed -i \"s/PHX_HOST=.*/PHX_HOST=${aws_instance.web.public_dns}/g\" \"../.env.p.remote.n\""
+    command = join(" ", [
+      "sed -i",
+      "s/PHX_HOST=.*/PHX_HOST=${aws_instance.web.public_dns}/g",
+      "${var.ENV_FILENAME_INTERMEDIATE}",
+    ])
   }
+}
+
+locals {
+  ansible_host_content = yamlencode({
+    "all" : {
+      "vars" : {
+        "CONTAINER_NAME" : var.CONTAINER_NAME,
+        "CONTAINER_IMAGE_NAME" : var.CONTAINER_IMAGE_NAME,
+        "ENV_FILENAME" : var.ENV_FILENAME,
+      },
+      "children" : {
+        "remote" : {
+          "hosts" : {
+            "staging" : {
+              "ansible_host" : "${aws_instance.web.public_ip}"
+              "ansible_user" : "ubuntu"
+              "ansible_private_key_file" : "${local.ssh_private_key_filename}"
+            }
+          }
+        }
+      }
+    }
+  })
+}
+
+resource "local_file" "ansible_host" {
+  depends_on = [aws_instance.web]
+
+  filename        = "${path.module}/ansible/hosts.yaml"
+  content         = local.ansible_host_content
+  file_permission = 0644
 }
 
 output "web_public_ip" {
