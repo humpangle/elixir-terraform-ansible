@@ -69,7 +69,7 @@ resource "aws_instance" "web" {
     command = join(" ", [
       "sed -i",
       "s/PHX_HOST=.*/PHX_HOST=${aws_instance.web.public_dns}/g",
-      "${var.ENV_FILENAME_INTERMEDIATE}",
+      "${var.ENV_FILENAME_TEMPORARY}",
     ])
   }
 }

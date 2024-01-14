@@ -41,11 +41,11 @@ variable "ENV_FILENAME" {
   type = string
 }
 
-variable "ENV_FILENAME_INTERMEDIATE" {
+variable "ENV_FILENAME_TEMPORARY" {
   type = string
 }
 
-variable "APP_ROOT" {
+variable "APP_DEPLOY_ROOT" {
   type = string
 }
 

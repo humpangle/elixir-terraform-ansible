@@ -31,4 +31,4 @@ runcmd:
   - chmod 755 /usr/bin/p-env
   - docker login --username ${CONTAINER_REGISTRY_USER_NAME} --password ${CONTAINER_REGISTRY_PASSWORD}
   - docker pull ${CONTAINER_IMAGE_NAME}
-  - su -c 'mkdir ${APP_ROOT}' - ubuntu
+  - su -c 'mkdir ${APP_DEPLOY_ROOT}' - ubuntu
