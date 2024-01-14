@@ -264,7 +264,7 @@ function drun {
   docker run -i -t --rm \
     --name "$CONTAINER_NAME" \
     --env-file="${ENV_FILENAME}" \
-    -p "$DOCKER_PUBLISHED_PORT:$PORT" \
+    -p "$DOCKER_PUBLISHED_SERVER_LISTEN_PORT:$PORT" \
     "$CONTAINER_IMAGE_NAME"
 }
 
