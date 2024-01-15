@@ -1,3 +1,12 @@
+- name: Wait for connection and gather facts
+  hosts: all
+  tasks:
+    - name: "Wait for connection"
+      ansible.builtin.wait_for_connection:
+
+    - name: Gather facts for the first time
+      ansible.builtin.setup:
+
 - name: Run docker
   hosts: web_servers
   become: true

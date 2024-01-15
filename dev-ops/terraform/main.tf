@@ -98,6 +98,7 @@ resource "null_resource" "run_ansible" {
   # Wait for connection.
   # We also wait for cloud-init to finish running user-data otherwise apt
   # might be locked.
+  # https://stackoverflow.com/a/62407671
   provisioner "remote-exec" {
     connection {
       user        = "ubuntu"
