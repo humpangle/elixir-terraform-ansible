@@ -95,17 +95,20 @@ resource "local_file" "ansible_deploy_yaml" {
 resource "null_resource" "run_ansible" {
   depends_on = [local_file.ansible_deploy_yaml]
 
-  # Wait for connection.
-  # We also wait for cloud-init to finish running user-data otherwise apt
-  # might be locked.
-  # https://stackoverflow.com/a/62407671
-  provisioner "remote-exec" {
-    connection {
-      user        = "ubuntu"
-      private_key = tls_private_key.ssh_key.private_key_openssh
-      host        = aws_instance.web.public_dns
-    }
-    script = "await-cloud-init.sh"
+  # Wait for instance to become active
+  # https://stackoverflow.com/a/76329674
+  provisioner "local-exec" {
+    command = join(
+      " ",
+      [
+        "aws",
+        "ec2",
+        "wait",
+        "instance-status-ok",
+        "--instance-ids",
+        aws_instance.web.id,
+      ]
+    )
   }
 
   provisioner "local-exec" {
