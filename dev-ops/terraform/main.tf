@@ -6,6 +6,7 @@ locals {
   key_name                 = "web-key"
   ssh_private_key_filename = abspath("${path.module}/ssh-key.pem")
   ansible_directory_root   = abspath("${path.module}/../ansible")
+  ansible_deploy_file      = "${local.ansible_directory_root}/deploy.temp.yaml"
 }
 
 resource "aws_key_pair" "key_pair" {
@@ -86,9 +87,30 @@ resource "local_file" "ansible_host_yaml" {
 resource "local_file" "ansible_deploy_yaml" {
   depends_on = [aws_instance.web]
 
-  filename        = "${local.ansible_directory_root}/deploy.temp.yaml"
+  filename        = local.ansible_deploy_file
   content         = local.ansible_deploy_yaml_content
   file_permission = 0400
+}
+
+resource "null_resource" "run_ansible" {
+  depends_on = [local_file.ansible_deploy_yaml]
+
+  # Wait for connection.
+  # We also wait for cloud-init to finish running user-data otherwise apt
+  # might be locked.
+  provisioner "remote-exec" {
+    connection {
+      user        = "ubuntu"
+      private_key = tls_private_key.ssh_key.private_key_openssh
+      host        = aws_instance.web.public_dns
+    }
+    script = "await-cloud-init.sh"
+  }
+
+  provisioner "local-exec" {
+    command     = "ansible-playbook ${local.ansible_deploy_file}"
+    working_dir = local.ansible_directory_root
+  }
 }
 
 output "web_public_ip" {
