@@ -5,6 +5,7 @@ resource "tls_private_key" "ssh_key" {
 locals {
   key_name                 = "web-key"
   ssh_private_key_filename = abspath("${path.module}/ssh-key.pem")
+  ansible_directory_root   = abspath("${path.module}/../ansible")
 }
 
 resource "aws_key_pair" "key_pair" {
@@ -74,35 +75,20 @@ resource "aws_instance" "web" {
   }
 }
 
-locals {
-  ansible_host_content = yamlencode({
-    "all" : {
-      "vars" : {
-        "CONTAINER_NAME" : var.CONTAINER_NAME,
-        "CONTAINER_IMAGE_NAME" : var.CONTAINER_IMAGE_NAME,
-        "ENV_FILENAME" : var.ENV_FILENAME,
-      },
-      "children" : {
-        "remote" : {
-          "hosts" : {
-            "staging" : {
-              "ansible_host" : "${aws_instance.web.public_ip}"
-              "ansible_user" : "ubuntu"
-              "ansible_private_key_file" : "${local.ssh_private_key_filename}"
-            }
-          }
-        }
-      }
-    }
-  })
-}
-
-resource "local_file" "ansible_host" {
+resource "local_file" "ansible_host_yaml" {
   depends_on = [aws_instance.web]
 
-  filename        = "${path.module}/ansible/hosts.yaml"
-  content         = local.ansible_host_content
-  file_permission = 0644
+  filename        = "${local.ansible_directory_root}/hosts.temp.yaml"
+  content         = local.ansible_host_yaml_content
+  file_permission = 0400
+}
+
+resource "local_file" "ansible_deploy_yaml" {
+  depends_on = [aws_instance.web]
+
+  filename        = "${local.ansible_directory_root}/deploy.temp.yaml"
+  content         = local.ansible_deploy_yaml_content
+  file_permission = 0400
 }
 
 output "web_public_ip" {

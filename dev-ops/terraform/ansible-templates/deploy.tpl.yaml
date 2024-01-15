@@ -1,0 +1,33 @@
+- name: Run docker
+  hosts: web_servers
+  become: true
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+      changed_when: false
+
+    - name: Copy environment file to host
+      ansible.builtin.copy:
+        src: ${var.ENV_FILENAME_TEMPORARY}
+        dest: ${var.ENV_FILENAME}
+        mode: "0400"
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Run Docker container  # noqa xx
+      ansible.builtin.command:
+        chdir: ${var.APP_DEPLOY_ROOT}
+        argv:
+          - docker
+          - run
+          - -d
+          - --name
+          - ${var.CONTAINER_NAME}
+          - -p
+          - ${var.DOCKER_PUBLISHED_SERVER_LISTEN_PORT}:${var.PORT}
+          - --env-file=${var.ENV_FILENAME}
+          - ${var.CONTAINER_IMAGE_NAME}
+      register: docker_run
+      changed_when: docker_run.rc != 0

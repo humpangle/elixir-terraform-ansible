@@ -49,6 +49,18 @@ variable "APP_DEPLOY_ROOT" {
   type = string
 }
 
+variable "PORT" {
+  type = string
+}
+
+variable "DOCKER_PUBLISHED_SERVER_LISTEN_PORT" {
+  type = string
+}
+
+variable "HOST_NAME" {
+  type = string
+}
+
 variable "resource_tags" {
   type = map(string)
   default = {

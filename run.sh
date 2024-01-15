@@ -268,6 +268,38 @@ function drun {
     "$CONTAINER_IMAGE_NAME"
 }
 
+function file_content_to_terraform_list {
+  local _in_file=$1
+  local result=""
+
+  while IFS= read -r line; do
+    # Replace double quotes with escaped double quotes
+    escaped_line="${line//\"/\\\"}"
+
+    result+="\"$escaped_line\",\n"
+  done <"$_in_file"
+
+  # Here is what we are trying to achieve:
+  # [
+  #  ...result,
+  #  "",
+  # ]
+  result="[\n$result\n\"\",\n]"
+
+  local _in_file_basename
+  _in_file_basename="$(basename "$_in_file")"
+
+  local _in_file_dirname
+  _in_file_dirname="$(dirname "$_in_file")"
+
+  local _output_file="$_in_file_dirname/.___scratch--$_in_file_basename--out"
+  rm -rf "$_output_file"
+
+  echo -e "$result" >"$_output_file"
+
+  echo "Conversion completed. Result written to $_output_file"
+}
+
 function help {
   : "List available tasks."
 

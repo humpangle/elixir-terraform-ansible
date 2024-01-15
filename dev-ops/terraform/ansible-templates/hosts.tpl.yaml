@@ -1,0 +1,10 @@
+all:
+  children:
+    remote:
+      children:
+        web_servers:
+          hosts:
+            ${var.HOST_NAME}:
+              ansible_host: ${aws_instance.web.public_ip}
+              ansible_private_key_file: ${local.ssh_private_key_filename}
+              ansible_user: ubuntu
