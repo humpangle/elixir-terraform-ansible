@@ -163,6 +163,8 @@ function _raise-on-no-env {
     PORT
     CONTAINER_IMAGE_NAME
     CONTAINER_NAME
+    CERT_MODE
+    ENV_FILENAME_RAW
   )
 
   for _env_name in "${_required_envs[@]}"; do
@@ -235,6 +237,10 @@ function _echo {
 function d {
   : "Start development server"
 
+  _raise-on-no-env
+
+  mix setup
+
   elixir \
     -S mix phx.server
 }
@@ -246,6 +252,7 @@ function dbuild {
 
   docker build \
     -t "$CONTAINER_IMAGE_NAME" \
+    --build-arg CERT_MODE="${CERT_MODE}" \
     "$SCRIPT_DIR_PATH"
 }
 
@@ -265,7 +272,31 @@ function drun {
     --name "$CONTAINER_NAME" \
     --env-file="${ENV_FILENAME}" \
     -p "$DOCKER_PUBLISHED_SERVER_LISTEN_PORT:$PORT" \
+    -p "$DOCKER_PUBLISHED_SERVER_LISTEN_HTTP_PORT:$HTTP_PORT" \
     "$CONTAINER_IMAGE_NAME"
+}
+
+function infra {
+  : "Provision infrastruction and run app"
+
+  # Export environment variables into shell
+  set -a
+  # shellcheck source=.env.d
+  . "$ENV_FILENAME_RAW"
+  set +a
+
+  # Convert environment variables into form that docker can consume
+  p-env "$ENV_FILENAME_RAW" --level 5
+
+  # Remove generated ansible files
+  rm -rf ./dev-ops/ansible/*.gen.*
+
+  # Build and push docker container
+  dbuild
+  dpush
+
+  # Provision server and run app
+  terraform apply -auto-approve
 }
 
 function file_content_to_terraform_list {
@@ -297,7 +328,9 @@ function file_content_to_terraform_list {
 
   echo -e "$result" >"$_output_file"
 
-  echo "Conversion completed. Result written to $_output_file"
+  echo -e "$result"
+
+  echo -e "\n===============\nConversion completed. Result written to $_output_file"
 }
 
 function help {

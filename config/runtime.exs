@@ -32,8 +32,31 @@ secret_key_base =
     You can generate one by calling: mix phx.gen.secret
     """
 
-host = System.get_env("PHX_HOST") || "example.com"
-port = String.to_integer(System.get_env("PORT") || "4000")
+host =
+  System.get_env("PHX_HOST") ||
+    raise """
+    environment variable PHX_HOST is missing.
+    """
+
+port =
+  System.get_env("PORT")
+  |> Kernel.||(
+    raise """
+    environment variable PORT is missing.
+    """
+  )
+  |> String.to_integer()
+
+http_port =
+  System.get_env("HTTP_PORT")
+  |> Kernel.||(
+    raise """
+    environment variable HTTP_PORT is missing.
+    """
+  )
+  |> String.to_integer()
+
+ip = {0, 0, 0, 0}
 
 config :my_app, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
@@ -43,13 +66,13 @@ config :my_app, MyAppWeb.Endpoint,
     port: port,
     scheme: scheme
   ],
-  http: [
-    # Enable IPv6 and bind on all interfaces.
-    # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
-    # See the documentation on https://hexdocs.pm/plug_cowboy/Plug.Cowboy.html
-    # for details about using IPv6 vs IPv4 and loopback vs public addresses.
-    ip: {0, 0, 0, 0},
+  https: [
+    ip: ip,
     port: port
+  ],
+  http: [
+    ip: ip,
+    port: http_port
   ],
   secret_key_base: secret_key_base
 

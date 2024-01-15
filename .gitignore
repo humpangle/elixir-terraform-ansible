@@ -72,4 +72,4 @@ terraform.rc
 
 *.pem
 
-**/ansible/*.temp.*
+**/ansible/*.gen.*

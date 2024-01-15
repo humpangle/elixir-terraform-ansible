@@ -1,5 +1,6 @@
 - name: Wait for connection and gather facts
   hosts: all
+  gather_facts: false
   tasks:
     - name: "Wait for connection"
       ansible.builtin.wait_for_connection:
@@ -8,35 +9,58 @@
       ansible.builtin.setup:
 
 - name: Run docker
-  hosts: web_servers
-  become: true
+  hosts: ${HOST_NAME}
+  gather_facts: false
   tasks:
     - name: Update apt cache
       ansible.builtin.apt:
         update_cache: true
         upgrade: dist
+      become: true
       changed_when: false
 
     - name: Copy environment file to host
       ansible.builtin.copy:
-        src: ${var.ENV_FILENAME_TEMPORARY}
-        dest: ${var.ENV_FILENAME}
+        src: ${ENV_FILENAME_TEMPORARY}
+        dest: ${ENV_FILENAME}
         mode: "0400"
         owner: ubuntu
         group: ubuntu
 
-    - name: Run Docker container  # noqa xx
+    - name: Stop container if running
       ansible.builtin.command:
-        chdir: ${var.APP_DEPLOY_ROOT}
+        chdir: ${APP_DEPLOY_ROOT}
+        argv:
+          - docker
+          - stop
+          - ${CONTAINER_NAME}
+      changed_when: false
+      failed_when: false
+
+    - name: Remove the container so we can reuse the name
+      ansible.builtin.command:
+        chdir: /home/ubuntu/elixir-phoenix-terraform
+        argv:
+          - docker
+          - rm
+          - ${CONTAINER_NAME}
+      changed_when: false
+      failed_when: false
+
+    - name: Run Docker container  # noqa example suppress lint warning
+      ansible.builtin.command:
+        chdir: ${APP_DEPLOY_ROOT}
         argv:
           - docker
           - run
           - -d
           - --name
-          - ${var.CONTAINER_NAME}
+          - ${CONTAINER_NAME}
           - -p
-          - ${var.DOCKER_PUBLISHED_SERVER_LISTEN_PORT}:${var.PORT}
-          - --env-file=${var.ENV_FILENAME}
-          - ${var.CONTAINER_IMAGE_NAME}
+          - ${DOCKER_PUBLISHED_SERVER_LISTEN_PORT}:${PORT}
+          - -p
+          - ${DOCKER_PUBLISHED_SERVER_LISTEN_HTTP_PORT}:${HTTP_PORT}
+          - --env-file=${ENV_FILENAME}
+          - ${CONTAINER_IMAGE_NAME}
       register: docker_run
       changed_when: docker_run.rc != 0

@@ -61,6 +61,14 @@ variable "HOST_NAME" {
   type = string
 }
 
+variable "DOCKER_PUBLISHED_SERVER_LISTEN_HTTP_PORT" {
+  type = string
+}
+
+variable "HTTP_PORT" {
+  type = string
+}
+
 variable "resource_tags" {
   type = map(string)
   default = {

@@ -6,7 +6,8 @@ locals {
   key_name                 = "web-key"
   ssh_private_key_filename = abspath("${path.module}/ssh-key.pem")
   ansible_directory_root   = abspath("${path.module}/../ansible")
-  ansible_deploy_file      = "${local.ansible_directory_root}/deploy.temp.yaml"
+  ansible_deploy_file      = "${local.ansible_directory_root}/deploy.gen.yaml"
+  ansible_host_file        = "${local.ansible_directory_root}/hosts.gen.yaml"
 }
 
 resource "aws_key_pair" "key_pair" {
@@ -33,6 +34,14 @@ resource "aws_security_group" "web_public_sg" {
   }
 
   ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
     description = "HTTP"
     from_port   = 80
     to_port     = 80
@@ -48,7 +57,7 @@ resource "aws_security_group" "web_public_sg" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-  tags = merge(var.resource_tags, { name = "web_public_sg" })
+  tags = merge(var.resource_tags, { Name = "web_public_sg" })
 }
 
 resource "aws_instance" "web" {
@@ -79,7 +88,7 @@ resource "aws_instance" "web" {
 resource "local_file" "ansible_host_yaml" {
   depends_on = [aws_instance.web]
 
-  filename        = "${local.ansible_directory_root}/hosts.temp.yaml"
+  filename        = local.ansible_host_file
   content         = local.ansible_host_yaml_content
   file_permission = 0400
 }
@@ -95,7 +104,7 @@ resource "local_file" "ansible_deploy_yaml" {
 resource "null_resource" "run_ansible" {
   depends_on = [local_file.ansible_deploy_yaml]
 
-  # Wait for instance to become active
+  # Wait for instance to get into "running" state
   # https://stackoverflow.com/a/76329674
   provisioner "local-exec" {
     command = join(

@@ -31,16 +31,16 @@ RUN apt-get \
 WORKDIR /app
 
 # install hex + rebar
-RUN mix local.hex --force && \
-    mix local.rebar --force
+RUN mkdir -p config \
+  && mix local.hex --force \
+  && mix local.rebar --force
 
 # set build ENV
-ENV MIX_ENV="prod"
+ENV MIX_ENV=prod
 
 # install mix dependencies
 COPY mix.exs mix.lock ./
 RUN mix deps.get --only $MIX_ENV
-RUN mkdir config
 
 # copy compile-time config files before we compile dependencies
 # to ensure any relevant config change will trigger the dependencies
@@ -90,13 +90,18 @@ ENV LANG=en_US.UTF-8 \
   LANGUAGE=en_US:en \
   LC_ALL=en_US.UTF-8
 
-WORKDIR "/app"
+WORKDIR /app
 RUN chown nobody /app
 
 ################################# RUNNER ######################################
 
+ARG CERT_MODE=production
+
 # set runner ENV
-ENV MIX_ENV="prod"
+ENV MIX_ENV=prod \
+  SITE_ENCRYPT_DB=/app/certs \
+  CERT_MODE=${CERT_MODE} \
+  LOCAL_CERT_PORT=4003
 
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root \
@@ -104,6 +109,9 @@ COPY --from=builder --chown=nobody:root \
   ./
 
 USER nobody
+
+# Create directory where SSL certificates will be stored
+RUN mkdir -p /app/certs
 
 # If using an environment that doesn't automatically reap zombie processes, it is
 # advised to add an init process such as tini via `apt-get install`

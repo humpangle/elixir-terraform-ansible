@@ -4,7 +4,7 @@ all:
       children:
         web_servers:
           hosts:
-            ${var.HOST_NAME}:
-              ansible_host: ${aws_instance.web.public_ip}
-              ansible_private_key_file: ${local.ssh_private_key_filename}
+            ${HOST_NAME}:
+              ansible_host: ${INSTANCE_PUBLIC_IP}
+              ansible_private_key_file: ${SSH_PRIVATE_KEY_FILENAME}
               ansible_user: ubuntu

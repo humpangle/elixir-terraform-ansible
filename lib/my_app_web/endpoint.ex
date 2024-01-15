@@ -1,5 +1,6 @@
 defmodule MyAppWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :my_app
+  use SiteEncrypt.Phoenix
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -47,4 +48,42 @@ defmodule MyAppWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
   plug MyAppWeb.Router
+
+  @impl SiteEncrypt
+  def certification do
+    SiteEncrypt.configure(
+      client: :native,
+      domains: [
+        System.fetch_env!("PHX_HOST")
+      ],
+      emails: [
+        "maneptha+elixir-phoenix-terraform@gmail.com"
+      ],
+      db_folder: System.get_env("SITE_ENCRYPT_DB", Path.join("tmp", "site_encrypt_db")),
+      directory_url:
+        case System.get_env("CERT_MODE", "local") do
+          "local" ->
+            cert_port =
+              System.fetch_env!("LOCAL_CERT_PORT")
+              |> String.to_integer()
+
+            {:internal, port: cert_port}
+
+          "staging" ->
+            "https://acme-staging-v02.api.letsencrypt.org/directory"
+
+          "production" ->
+            "https://acme-v02.api.letsencrypt.org/directory"
+        end
+    )
+  end
+
+  @impl Phoenix.Endpoint
+  def init(_key, config) do
+    # this will merge key, cert, and chain into `:https` configuration from config.exs
+    {:ok, SiteEncrypt.Phoenix.configure_https(config)}
+
+    # to completely configure https from `init/2`, invoke:
+    #   SiteEncrypt.Phoenix.configure_https(config, port: 4001, ...)
+  end
 end
