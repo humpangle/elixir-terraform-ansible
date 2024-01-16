@@ -3,13 +3,7 @@ variable "AWS_REGION" {
   sensitive = true
 }
 
-
-variable "AWS_ACCESS_KEY_ID" {
-  type      = string
-  sensitive = true
-}
-
-variable "AWS_SECRET_ACCESS_KEY" {
+variable "AWS_PROFILE" {
   type      = string
   sensitive = true
 }
