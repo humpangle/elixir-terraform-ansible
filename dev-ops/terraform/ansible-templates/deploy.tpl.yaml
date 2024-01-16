@@ -1,5 +1,16 @@
+- name: Wait for connection and gather facts
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: "Wait for connection"
+      ansible.builtin.wait_for_connection:
+
+    - name: Gather facts for the first time
+      ansible.builtin.setup:
+
 - name: Run docker
   hosts: ${HOST_NAME}
+  gather_facts: false
   tasks:
     - name: Update apt cache
       ansible.builtin.apt:
