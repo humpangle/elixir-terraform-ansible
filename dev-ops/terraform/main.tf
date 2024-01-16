@@ -121,7 +121,16 @@ resource "null_resource" "run_ansible" {
   }
 
   provisioner "local-exec" {
-    command     = "ansible-playbook ${local.ansible_deploy_file}"
+    command = join(
+      " ",
+      [
+        "ansible-playbook",
+        "--inventory ",
+        local.ansible_host_file,
+        local.ansible_deploy_file
+      ]
+    )
+
     working_dir = local.ansible_directory_root
   }
 }
