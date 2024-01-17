@@ -15,7 +15,7 @@ resource "aws_key_pair" "key_pair" {
 resource "local_file" "private_key" {
   content         = tls_private_key.ssh_key.private_key_openssh
   filename        = local.ssh_private_key_filename
-  file_permission = 0400
+  file_permission = 0600
 }
 
 resource "aws_security_group" "web_public_sg" {
@@ -81,8 +81,6 @@ resource "aws_instance" "web" {
 
   key_name = aws_key_pair.key_pair.key_name
 
-  user_data_base64 = data.cloudinit_config.user_data_web.rendered
-
   tags = merge(
     var.resource_tags,
     { Name = "web" }
@@ -105,7 +103,7 @@ resource "local_file" "ansible_host_yaml" {
 
   filename        = local.ansible_host_file
   content         = local.ansible_host_yaml_content
-  file_permission = 0400
+  file_permission = 0600
 }
 
 resource "local_file" "ansible_deploy_yaml" {
@@ -113,7 +111,7 @@ resource "local_file" "ansible_deploy_yaml" {
 
   filename        = local.ansible_deploy_file
   content         = local.ansible_deploy_yaml_content
-  file_permission = 0400
+  file_permission = 0600
 }
 
 resource "null_resource" "run_ansible" {

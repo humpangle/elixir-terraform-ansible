@@ -254,7 +254,6 @@ function dbuild {
 
   docker build \
     -t "$CONTAINER_IMAGE_NAME" \
-    --build-arg CERT_MODE="${CERT_MODE}" \
     "$SCRIPT_DIR_PATH"
 }
 

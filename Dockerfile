@@ -95,12 +95,9 @@ RUN chown nobody /app
 
 ################################# RUNNER ######################################
 
-ARG CERT_MODE=production
-
 # set runner ENV
 ENV MIX_ENV=prod \
   SITE_ENCRYPT_DB=/app/certs \
-  CERT_MODE=${CERT_MODE} \
   LOCAL_CERT_PORT=4003
 
 # Only copy the final release from the build stage

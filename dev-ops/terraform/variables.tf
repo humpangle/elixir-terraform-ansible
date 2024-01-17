@@ -8,10 +8,6 @@ variable "AWS_PROFILE" {
   sensitive = true
 }
 
-variable "DOCKER_GPG_KEY_ID" {
-  type = string
-}
-
 variable "CONTAINER_REGISTRY_USER_NAME" {
   type      = string
   sensitive = true
