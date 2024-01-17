@@ -165,6 +165,8 @@ function _raise-on-no-env {
     CONTAINER_NAME
     CERT_MODE
     ENV_FILENAME_RAW
+    DEV_OPS_ROOT_TERRAFORM
+    TERRAFORM_ENVIRONMENT
   )
 
   for _env_name in "${_required_envs[@]}"; do
@@ -289,14 +291,20 @@ function infra {
   p-env "$ENV_FILENAME_RAW" --level 5
 
   # Remove generated ansible files
-  rm -rf ./dev-ops/ansible/*.gen.*
+  for _file in ./dev-ops/ansible/*.gen.*; do
+    if echo "$_file" | grep -qP "$PROJECT_NAME.+gen\."; then
+      rm -rf "_file = $_file"
+    fi
+  done
 
   # Build and push docker container
   dbuild
   dpush
 
   # Provision server and run app
+  cd "$DEV_OPS_ROOT_TERRAFORM/environments/$TERRAFORM_ENVIRONMENT" || exit 1
   terraform apply -auto-approve
+  cd - &>/dev/null || exit 1
 }
 
 function help {

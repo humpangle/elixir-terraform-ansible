@@ -63,6 +63,22 @@ variable "HTTP_PORT" {
   type = string
 }
 
+variable "PROJECT_NAME" {
+  type = string
+}
+
+variable "DEV_OPS_ROOT" {
+  type = string
+}
+
+variable "DEV_OPS_ROOT_TERRAFORM" {
+  type = string
+}
+
+variable "DEV_OPS_ROOT_ANSIBLE" {
+  type = string
+}
+
 variable "resource_tags" {
   type = map(string)
   default = {

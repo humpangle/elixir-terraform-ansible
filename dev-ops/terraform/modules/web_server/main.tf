@@ -3,11 +3,8 @@ resource "tls_private_key" "ssh_key" {
 }
 
 locals {
-  key_name                 = "web-key"
-  ssh_private_key_filename = abspath("${path.module}/ssh-key.pem")
-  ansible_directory_root   = abspath("${path.module}/../ansible")
-  ansible_deploy_file      = "${local.ansible_directory_root}/deploy.gen.yaml"
-  ansible_host_file        = "${local.ansible_directory_root}/hosts.gen.yaml"
+  key_name                 = "web-key-${var.PROJECT_NAME}"
+  ssh_private_key_filename = "${var.DEV_OPS_ROOT_ANSIBLE}/ssh-key-${var.PROJECT_NAME}.gen.pem"
 }
 
 resource "aws_key_pair" "key_pair" {
@@ -57,14 +54,30 @@ resource "aws_security_group" "web_public_sg" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-  tags = merge(var.resource_tags, { Name = "web_public_sg" })
+  tags = merge(
+    var.resource_tags,
+    { Name = "web_public_sg" }
+  )
+}
+
+data "aws_ami" "ubuntu_ami" {
+  most_recent = true
+  name_regex  = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
+  owners      = ["amazon"]
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
 }
 
 resource "aws_instance" "web" {
-  ami           = local.ami_id
+  ami           = data.aws_ami.ubuntu_ami.id
   instance_type = "t2.micro"
 
-  vpc_security_group_ids = [aws_security_group.web_public_sg.id]
+  vpc_security_group_ids = [
+    aws_security_group.web_public_sg.id
+  ]
 
   key_name = aws_key_pair.key_pair.key_name
 
@@ -86,7 +99,9 @@ resource "aws_instance" "web" {
 }
 
 resource "local_file" "ansible_host_yaml" {
-  depends_on = [aws_instance.web]
+  depends_on = [
+    aws_instance.web
+  ]
 
   filename        = local.ansible_host_file
   content         = local.ansible_host_yaml_content
@@ -102,7 +117,11 @@ resource "local_file" "ansible_deploy_yaml" {
 }
 
 resource "null_resource" "run_ansible" {
-  depends_on = [local_file.ansible_deploy_yaml]
+  depends_on = [
+    local_file.private_key,
+    local_file.ansible_host_yaml,
+    local_file.ansible_deploy_yaml
+  ]
 
   # Wait for instance to get into "running" state
   # https://stackoverflow.com/a/76329674
@@ -131,7 +150,7 @@ resource "null_resource" "run_ansible" {
       ]
     )
 
-    working_dir = local.ansible_directory_root
+    working_dir = var.DEV_OPS_ROOT_ANSIBLE
   }
 }
 

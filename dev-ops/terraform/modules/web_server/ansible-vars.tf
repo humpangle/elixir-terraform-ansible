@@ -1,6 +1,11 @@
 locals {
+  ansible_deploy_file = "${var.DEV_OPS_ROOT_ANSIBLE}/deploy-${var.PROJECT_NAME}.gen.yaml"
+  ansible_host_file   = "${var.DEV_OPS_ROOT_ANSIBLE}/hosts-${var.PROJECT_NAME}.gen.yaml"
+}
+
+locals {
   ansible_host_yaml_content = templatefile(
-    "./ansible-templates/hosts.tpl.yaml",
+    "${var.DEV_OPS_ROOT_TERRAFORM}/ansible-templates/hosts.tpl.yaml",
     {
       HOST_NAME                = var.HOST_NAME,
       INSTANCE_PUBLIC_IP       = aws_instance.web.public_ip,
@@ -11,7 +16,7 @@ locals {
 
 locals {
   ansible_deploy_yaml_content = templatefile(
-    "./ansible-templates/deploy.tpl.yaml",
+    "${var.DEV_OPS_ROOT_TERRAFORM}/ansible-templates/deploy.tpl.yaml",
     {
       APP_DEPLOY_ROOT                          = var.APP_DEPLOY_ROOT,
       CONTAINER_IMAGE_NAME                     = var.CONTAINER_IMAGE_NAME,
